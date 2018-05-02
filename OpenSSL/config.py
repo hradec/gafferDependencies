@@ -20,6 +20,8 @@
 
 	"manifest" : [
 
+		# The "lib" prefix is correct for all platforms
+
 		"lib/libssl*{sharedLibraryExtension}*",
 		"lib/libcrypto*{sharedLibraryExtension}*",
 
@@ -32,6 +34,15 @@
 			"KERNEL_BITS" : "64",
 
 		},
+
+	},
+
+	"platform:windows" : {
+
+		# Python builds it's own OpenSSL that we don't want to conflict with
+
+		"manifest" : [],
+		"commands" : [],
 
 	},
 
