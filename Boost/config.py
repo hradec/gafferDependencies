@@ -57,17 +57,23 @@
 
 		},
 
+		"publicVariables" : {
+
+			"boostLibSuffix" : "-vc141-mt-x64${boostVersionSuffix}",
+
+		},
+
 		"environment" : {
 
 			# Boost needs help finding Python
 			"PATH" : "%PATH%;{buildDir}\\bin",
-			"PYTHONPATH" : "{buildDir};{buildDir}\\bin;{buildDir}\\lib64;{buildDir}\\lib"
+			"PYTHONPATH" : "{buildDir};{buildDir}\\bin;{buildDir}\\lib\\python{pythonVersion};{buildDir}\\lib"
 
 		},
 
 		"commands" : [
-
-			"bootstrap.bat --prefix={buildDir} --with-python=\"{buildDir}\" --with-python-root=\"{buildDir}\" --without-libraries=log",
+			"echo using python : {pythonVersion} : \"{buildDirFwd}/bin/python\" : {pythonIncludeDir} : {pythonLibDir} ; >> tools\\build\\src\\user-config.jam",  # best to use forward slashes in user-config.jam
+			"bootstrap.bat --prefix={buildDir} --without-libraries=log",
 			"b2 -d+2 --prefix={buildDir} --toolset=msvc architecture=x86 address-model=64 --build-type=complete variant=release link=shared threading=multi cxxflags=\"/std:c++{c++Standard}\" -s ZLIB_SOURCE=%ROOT_DIR%\\Zlib\\working\\zlib-1.2.11 -s ZLIB_INCLUDE={buildDir}\\include -s ZLIB_LIBPATH={buildDir}\\lib -s ZLIB_BINARY=zlib install"
 
 		],
