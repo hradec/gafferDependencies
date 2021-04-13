@@ -92,6 +92,7 @@ jobs:
            os: windows-2016
            buildType: RELEASE
            variant: windows-python3
+           python-version: '3.x'
            publish: true
            containerImage:
            dependenciesURL: https://github.com/hypothetical-inc/gafferDependencies/releases/download/0.54.1.0/gafferDependencies-0.54.1.0-windows-msvc2017.zip
@@ -107,17 +108,22 @@ jobs:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
       GAFFER_BUILD_DIR: "./build"
       GAFFER_CACHE_DIR: "./sconsCache"
+      GAFFER_BUILD_VARIANT: ${{ matrix.variant }}
 
     steps:
 
     - uses: actions/checkout@v2
     - uses: ilammy/msvc-dev-cmd@v1 # for windows - does nothing on Linux/osx
+      # with:
+      #   toolset: "9"
+
 
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
+        python-version: ${{ matrix.python-version }}
       if: runner.os == 'Windows'
+
 
     # - name: Install toolchain (MacOS)
     #   # Prefer `pip install` where possible because it is faster
@@ -149,22 +155,32 @@ jobs:
         pip install pywin32
         scons --version
         mkdir -p $GAFFER_BUILD_DIR/bin
+        CD=$(readlink -f $(pwd))
         cd $GAFFER_BUILD_DIR/bin
+        export PATH=$(pwd):$PATH
         echo PATH=$(pwd):$PATH >> $GITHUB_ENV
         curl -L -O http://download.qt.io/official_releases/jom/jom.zip ; unzip jom.zip
-        #curl -L -O https://cygwin.com/setup-x86_64.exe ; ./setup-x86_64.exe  -q -P bison,flex,nasm,
-        bison --version
-        flex --version
-        nasm --version
-        autoconf --version
-        gawk --version
-        grep --version
-        sed --version
-        patch --version
+        curl -L https://sourceforge.net/projects/winflexbison/files/win_flex_bison-2.5.24.zip/download > win_flex_bison_2.5.24.zip
+        unzip win_flex_bison_2.5.24.zip
+        mv win_flex.exe flex.exe
+        mv win_bison.exe bison.exe
+        cd $CD
+
+        # curl -L -O https://raw.githubusercontent.com/transcode-open/apt-cyg/master/apt-cyg
+        # chmod +x ./apt-cyg
+        # ./apt-cyg mirror http://mirrors.sohu.com/cygwin/
+        # curl -L -O https://cygwin.com/setup-x86_64.exe ; ./setup-x86_64.exe  -q -P bison
+        # nasm --version || true
+
+        # patch python config.py to only build the python version we want
+        python_version=$(echo $GAFFER_BUILD_VARIANT | awk -F'python' '{print $(NF)}')
+        sed -i.bak -e "s/variants.......2....3...,/variants\" : [ \"$python_version\" ],/" ./Python/config.py
 
         # we remove /usr/bin/link so it doesn't interfere with MSVC link
         rm /usr/bin/link
       if: runner.os == 'Windows'
+
+
 
     # - name: 'Install Python Modules'
     #   shell: bash
@@ -172,14 +188,6 @@ jobs:
     #     python --version
     #     pip install PyJWT==1.7.1 PyGitHub==1.45
     #
-    # - name: Set Custom Variables
-    #   shell: bash
-    #   run: |
-    #     .github/workflows/main/setBuildVars.py
-    #     echo GAFFER_SPHINX=`which sphinx-build` >> $GITHUB_ENV
-    #   env:
-    #    GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #    GAFFER_BUILD_VARIANT: ${{ matrix.variant }}
     #
     # - name: Disable macOS PR Docs
     #   run: |
@@ -228,8 +236,7 @@ jobs:
     - name: Build Gaffer Dependencies
       shell: bash
       run: |
-        env
-        ./build.sh
+        ./build.py > build.log 2>&1 || ( tail -n 200 ./build.log ; grep ' error' ./build.log ; exit -1 )
 
     # - name: Test
     #   run: |
@@ -274,3 +281,10 @@ jobs:
       # unbounded growth. In practice, the archives that get uploaded are much smaller
       # than the limit we apply here, because they're compressed.
       run: ./.github/workflows/main/limitDirectorySize.py --directory ./sconsCache --megabytes ${{ matrix.sconsCacheMegabytes }} --verbose
+
+    # DEBUG: connect to the action node using tmate for debugging
+    # NOTE: when opening the tmate link, press 'q' to go to the shell!
+    - name: Setup tmate session for debug if error (15 minutes timeout)
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 15
