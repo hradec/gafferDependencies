@@ -152,14 +152,15 @@ jobs:
         cd $GAFFER_BUILD_DIR/bin
         echo PATH=$(pwd):$PATH >> $GITHUB_ENV
         curl -L -O http://download.qt.io/official_releases/jom/jom.zip ; unzip jom.zip
-        curl -L -O https://cygwin.com/setup-x86_64.exe ; ./setup-x86_64.exe  -q -P bison
-        flex --version || true
-        nasm --version || true
-        autoconf --version || true
-        gawk --version || true
-        grep --version || true
-        sed --version || true
-        patch --version || true
+        #curl -L -O https://cygwin.com/setup-x86_64.exe ; ./setup-x86_64.exe  -q -P bison,flex,nasm,
+        bison --version
+        flex --version
+        nasm --version
+        autoconf --version
+        gawk --version
+        grep --version
+        sed --version
+        patch --version
 
         # we remove /usr/bin/link so it doesn't interfere with MSVC link
         rm /usr/bin/link
