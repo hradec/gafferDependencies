@@ -30,13 +30,13 @@
 
 		"commands" : [
 
-			"sh -c \"CC=cl ./autogen.sh\" --prefix={buildDir}",
+			"bash -c \"CC=cl ./autogen.sh\" --prefix={buildDir}",
 			"msbuild msvc\jemalloc_vc2017.sln -target:jemalloc /property:Configuration=\"Release\" /property:WindowsTargetPlatformVersion=10.0.17763.0" ,
 			"copy msvc\\x64\\Release\\jemalloc.dll {buildDir}\\lib",
 			"copy msvc\\x64\\Release\\jemalloc.lib {buildDir}\\lib",
 			"xcopy /s /e /h /y /i include\\jemalloc {buildDir}\\include\\jemalloc",
 			"xcopy /s /e /h /y /i include\\msvc_compat {buildDir}\\include\\msvc_compat",
-	
+
 		],
 
 	},
