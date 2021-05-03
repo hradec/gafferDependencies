@@ -235,7 +235,7 @@ jobs:
     - name: Build Gaffer Dependencies
       shell: bash
       run: |
-        (./build.py 2>&1 | tee build.log ) || ( tail -n 200 ./build.log ; grep ' error' ./build.log ; exit -1 )
+        (./build.py 2>&1 > build.log ) || ( tail -n 200 ./build.log ; grep ' error' ./build.log ; exit -1 )
 
     # - name: Test
     #   run: |
@@ -286,4 +286,4 @@ jobs:
     - name: Setup tmate session for debug if error (15 minutes timeout)
       if: ${{ failure() }}
       uses: mxschmitt/action-tmate@v3
-      timeout-minutes: 15
+      # timeout-minutes: 15
